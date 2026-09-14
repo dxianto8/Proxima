@@ -47,23 +47,38 @@ export function CanvasPanel() {
   const connect = useCallback(async () => {
     setConnecting(true);
     setError(null);
+    // Nothing saved yet means this is a first connection, not a refresh of one.
+    const firstConnection = !connection.baseUrl;
     try {
       const response = await postCanvas<{ courses: CanvasCourse[] }>(
         "/api/canvas/courses",
         { baseUrl, token },
       );
       setCourses(response.courses);
-      setCanvas({ baseUrl: baseUrl.trim(), token: token.trim() });
-      if (response.courses.length > 0 && selected.length === 0) {
-        setCanvas({ selectedCourseIds: response.courses.map((course) => course.id) });
-      }
+
+      // Refreshing the course list must not touch what the user picked: keep
+      // their selection, drop only courses Canvas no longer returns, and never
+      // silently opt them into a course they didn't choose. Selecting
+      // everything is a first-connection convenience only.
+      const available = new Set(response.courses.map((course) => course.id));
+      const stillAvailable = selected.filter((id) => available.has(id));
+      const selectedCourseIds =
+        firstConnection && stillAvailable.length === 0
+          ? response.courses.map((course) => course.id)
+          : stillAvailable;
+
+      setCanvas({
+        baseUrl: baseUrl.trim(),
+        token: token.trim(),
+        selectedCourseIds,
+      });
     } catch (failure) {
       setCourses(null);
       setError(describeError(failure));
     } finally {
       setConnecting(false);
     }
-  }, [baseUrl, token, setCanvas, selected.length]);
+  }, [baseUrl, token, setCanvas, selected, connection.baseUrl]);
 
   function toggleCourse(id: number) {
     const next = selected.includes(id)
