@@ -9,7 +9,13 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "node --import ./tests/register.mjs --test --experimental-strip-types \"tests/*.test.ts\"",
-    "check": "npm run typecheck && npm test"
+    "check": "npm run typecheck && npm test",
+    "desktop:prepare": "npm run build && node scripts/prepare-desktop.mjs",
+    "desktop:start": "electron .",
+    "desktop:dev": "npm run desktop:prepare && electron .",
+    "desktop:pack": "npm run desktop:prepare && electron-builder --dir",
+    "desktop:mac": "npm run desktop:prepare && electron-builder --mac",
+    "icon": "node scripts/make-icon.mjs"
   },
   "dependencies": {
     "next": "16.3.5",
@@ -21,7 +27,10 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "main": "desktop/main.js"
 }

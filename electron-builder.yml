@@ -1,0 +1,64 @@
+appId: com.proxima.app
+productName: Proxima
+copyright: Proxima
+
+directories:
+  output: release
+  buildResources: build
+
+# Only the Electron shell goes inside the asar. The shell itself needs no npm
+# packages — Next, React and everything they trace are already bundled inside
+# `desktop/app` — so the project's node_modules is excluded outright. Without
+# that exclusion electron-builder packs every production dependency a second
+# time (~200MB).
+files:
+  - desktop/main.js
+  - desktop/preload.js
+  - desktop/loading.html
+  - package.json
+  - "!node_modules/**"
+
+# The staged Next server is copied into Resources/app by the afterPack hook
+# rather than by extraResources, which strips node_modules from what it copies.
+afterPack: scripts/after-pack.js
+
+asar: true
+
+mac:
+  category: public.app-category.productivity
+  icon: build/icon.png
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+  darkModeSupport: true
+  # No Developer ID certificate in CI, so ship unsigned rather than emit a
+  # broken signature. The README explains the Gatekeeper prompt this causes.
+  identity: null
+  extendInfo:
+    LSMinimumSystemVersion: "11.0"
+    NSHumanReadableCopyright: Proxima
+
+dmg:
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  contents:
+    - x: 140
+      y: 180
+      type: file
+    - x: 400
+      y: 180
+      type: link
+      path: /Applications
+
+# Used only to smoke-test the packaged layout on the build machine.
+linux:
+  icon: build/icon.png
+  category: Office
+  target:
+    - dir
+
+win:
+  icon: build/icon.png
+  target:
+    - nsis

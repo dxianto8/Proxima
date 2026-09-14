@@ -5,6 +5,7 @@ import { StoreProvider } from "@/lib/store";
 import { ThemeScript, ThemeSync } from "@/components/theme";
 import { TaskEditorProvider } from "@/components/task-editor";
 import { AppShell } from "@/components/app-shell";
+import { DesktopBridge, DesktopTitlebar } from "@/components/desktop-bridge";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -43,6 +44,8 @@ export default function RootLayout({
         <StoreProvider>
           <ThemeSync />
           <TaskEditorProvider>
+            <DesktopBridge />
+            <DesktopTitlebar />
             <AppShell>{children}</AppShell>
           </TaskEditorProvider>
         </StoreProvider>
