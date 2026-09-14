@@ -6,6 +6,15 @@
  */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* Raised by the Electron shell on macOS to clear the inset traffic lights. */
+:root {
+  --titlebar-h: 0px;
+}
+
+:root[data-desktop="mac"] {
+  --titlebar-h: 28px;
+}
+
 :root {
   --bg: #f7f8fa;
   --surface: #ffffff;

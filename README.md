@@ -49,6 +49,71 @@ set `CANVAS_BASE_URL` (and optionally `CANVAS_ACCESS_TOKEN`). The Settings page
 picks these up and skips asking for what is already configured. These are read
 on the server only.
 
+## The Mac app
+
+Proxima also ships as a desktop app. It's the same application, bundled with
+its own server so it runs offline with no terminal and no browser tab.
+
+### Download
+
+Installers are built by GitHub Actions on a macOS runner:
+
+- **Tagged release** — push a tag (`git tag v0.1.0 && git push origin v0.1.0`)
+  and the workflow publishes a GitHub release with `Proxima-0.1.0-arm64.dmg`
+  (Apple silicon) and `Proxima-0.1.0-x64.dmg` (Intel) attached.
+- **Without tagging** — run **Build macOS app** from the repository's Actions
+  tab and download the `proxima-macos` artifact from the finished run.
+
+Open the `.dmg` and drag Proxima to Applications.
+
+### First launch
+
+The app is **not code-signed** — that needs a paid Apple Developer ID — so
+macOS will refuse to open it the first time, reporting that it is damaged or
+from an unidentified developer. This is Gatekeeper reacting to the missing
+signature, not to anything wrong with the app. To get past it:
+
+**System Settings → Privacy & Security**, scroll to the bottom, and choose
+**Open Anyway** next to the Proxima message, or from a terminal:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Proxima.app
+```
+
+You only have to do this once. If you have a Developer ID, set
+`CSC_LINK` / `CSC_KEY_PASSWORD` in the workflow and remove `identity: null`
+from `electron-builder.yml` to ship a signed build instead.
+
+Requires macOS 11 Big Sur or newer.
+
+### Building it yourself
+
+```bash
+npm run desktop:prepare   # build Next, stage the server under desktop/app
+npm run desktop:start     # run the desktop app against that bundle
+npm run desktop:mac       # produce release/*.dmg (macOS only)
+```
+
+`npm run desktop:pack` builds an unpacked bundle for the current platform,
+which is handy for checking packaging without making an installer.
+
+### How the desktop build works
+
+`next.config.ts` emits a `standalone` server. `scripts/prepare-desktop.mjs`
+stages that server plus the client assets into `desktop/app`, and
+`desktop/main.js` starts it on a random loopback port and points a window at
+it. Nothing listens on a public interface, and no second rendering path exists
+— the desktop app runs exactly the code the web app runs, including the Canvas
+proxy routes.
+
+The trade-off is size: bundling Electron and a Node server puts the download
+around 100–130 MB. The alternative — exporting a static site and rewriting the
+Canvas calls to run in Electron's main process — would be far smaller but would
+mean two versions of the integration to keep in step.
+
+Native menu items work as you'd expect: ⌘N for a new task, ⌘F to search,
+⌘1–⌘5 to switch views, and ⌘⇧S to open the Canvas settings.
+
 ## Quick add
 
 The capture box at the top of most pages parses as you type, and shows you what
@@ -99,6 +164,10 @@ clears it. **Settings → Your data** exports a JSON backup and restores one.
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm test` | Unit tests (`node --test`) |
 | `npm run check` | Typecheck, then tests |
+| `npm run desktop:prepare` | Build and stage the bundle the desktop app runs |
+| `npm run desktop:start` | Launch the desktop app against that bundle |
+| `npm run desktop:mac` | Build `release/*.dmg` (macOS only) |
+| `npm run icon` | Regenerate `build/icon.png` |
 
 ## How it fits together
 
@@ -107,6 +176,9 @@ app/
   today/ upcoming/ tasks/ calendar/ courses/ settings/   pages (client-rendered)
   api/canvas/                                            Canvas proxy routes
 components/                                              UI, calendar, Canvas panel
+desktop/
+  main.js        Electron main: runs the bundled server, window, native menu
+  preload.js     the only renderer bridge (platform + menu commands)
 lib/
   store.tsx      the localStorage-backed store and its actions
   canvas.ts      Canvas REST client: pagination, normalising, error messages
@@ -114,6 +186,7 @@ lib/
   selectors.ts   filtering, sorting, grouping, summaries
   date.ts        local-time date helpers
 tests/                                                   unit tests
+scripts/                                                 icon, desktop staging, packaging hook
 ```
 
 The Canvas calls go through `app/api/canvas/*` rather than straight from the

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Proxima</title>
+    <style>
+      :root { color-scheme: light dark; }
+      html, body { height: 100%; margin: 0; }
+      body {
+        display: grid;
+        place-items: center;
+        background: #f7f8fa;
+        color: #5c626c;
+        font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        -webkit-user-select: none;
+        -webkit-app-region: drag;
+      }
+      @media (prefers-color-scheme: dark) {
+        body { background: #0d0f13; color: #9aa2ae; }
+      }
+      .wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+      .mark {
+        width: 38px; height: 38px; border-radius: 10px;
+        background: #4b56d2; display: grid; place-items: center;
+        animation: pulse 1.6s ease-in-out infinite;
+      }
+      @media (prefers-color-scheme: dark) { .mark { background: #7a83ef; } }
+      svg { width: 20px; height: 20px; fill: #fff; }
+      @media (prefers-color-scheme: dark) { svg { fill: #0d0f13; } }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+      @media (prefers-reduced-motion: reduce) { .mark { animation: none; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="mark">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2.5 14.2 9l6.3 2.2-6.3 2.2L12 20l-2.2-6.6L3.5 11.2 9.8 9 12 2.5Z" />
+        </svg>
+      </div>
+      <p>Starting Proxima…</p>
+    </div>
+  </body>
+</html>

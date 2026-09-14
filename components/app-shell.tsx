@@ -39,7 +39,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => setMobileOpen(false), [pathname]);
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-bg">
+    <div className="mt-[var(--titlebar-h)] flex h-[calc(100dvh-var(--titlebar-h))] overflow-hidden bg-bg">
       {/* Desktop rail */}
       <aside className="hidden w-[248px] shrink-0 border-r border-border bg-surface lg:flex">
         <SidebarContent />
