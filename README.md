@@ -30,7 +30,9 @@ Then open <http://localhost:3000>.
    work that is already past due or already submitted, and marks submitted
    items as done. Adjust, then **Import**.
 
-Press **Sync now** later to pick up new assignments and changed due dates.
+Press **Sync now** later to pick up new assignments and changed due dates — or
+use the refresh button in the top bar, which runs the same sync from wherever
+you are. It appears once a connection is saved.
 Re-syncing matches on the Canvas item id, so it updates tasks in place rather
 than duplicating them — and it leaves your own edits (notes, priority,
 estimate, and a status you set by hand) alone.
@@ -112,7 +114,7 @@ Canvas calls to run in Electron's main process — would be far smaller but woul
 mean two versions of the integration to keep in step.
 
 Native menu items work as you'd expect: ⌘N for a new task, ⌘F to search,
-⌘1–⌘5 to switch views, and ⌘⇧S to open the Canvas settings.
+⌘1–⌘5 to switch views, and ⌘⇧S to sync with Canvas.
 
 ## Quick add
 
@@ -142,7 +144,8 @@ sentence always works.
 - **Calendar** — month and week views. Drag a task onto another day to
   reschedule it; the time of day is preserved.
 - **Courses** — colour-coded groups with progress. Canvas courses appear here
-  automatically after a sync.
+  automatically after a sync. Right-click one in the sidebar to open it, add a
+  task to it, edit, archive or delete it.
 
 Keyboard: `N` for a new task, `/` to search, `Enter` to add what you're typing,
 `Esc` to close a panel.

@@ -234,9 +234,9 @@ function buildMenu() {
         },
         { type: "separator" },
         {
-          label: "Sync with Canvas…",
+          label: "Sync with Canvas",
           accelerator: "CmdOrCtrl+Shift+S",
-          click: () => send("go:/settings"),
+          click: () => send("sync"),
         },
         { type: "separator" },
         isMac ? { role: "close" } : { role: "quit" },

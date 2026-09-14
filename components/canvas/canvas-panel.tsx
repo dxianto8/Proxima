@@ -1,51 +1,29 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useStore, type ImportResult } from "@/lib/store";
-import type { CanvasCourse, CanvasItem } from "@/lib/types";
+import { useStore } from "@/lib/store";
+import type { CanvasCourse } from "@/lib/types";
+import { describeError, postCanvas } from "@/lib/canvas-client";
 import { cn, pluralize } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { CanvasImportDialog } from "./import-dialog";
+import { useCanvasSync } from "./sync-provider";
 import { CheckIcon, ExternalLinkIcon, LinkIcon, RefreshIcon } from "@/components/icons";
-
-interface ApiError {
-  error: string;
-  hint?: string | null;
-}
-
-async function post<T>(url: string, body: unknown): Promise<T> {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const failure = payload as ApiError;
-    const error = new Error(failure.error || "Canvas request failed");
-    (error as Error & { hint?: string }).hint = failure.hint ?? undefined;
-    throw error;
-  }
-  return payload as T;
-}
 
 export function CanvasPanel() {
   const { data, setCanvas } = useStore();
   const connection = data.canvas;
+  // Fetching and the import preview are shared with the top bar's sync button.
+  const { sync, syncing, lastResult } = useCanvasSync();
 
   const [baseUrl, setBaseUrl] = useState(connection.baseUrl);
   const [token, setToken] = useState(connection.token);
   const [courses, setCourses] = useState<CanvasCourse[] | null>(null);
-  const [items, setItems] = useState<CanvasItem[]>([]);
-  const [includeEvents, setIncludeEvents] = useState(false);
-  const [busy, setBusy] = useState<"connect" | "fetch" | null>(null);
+  const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<{ message: string; hint?: string } | null>(null);
-  const [result, setResult] = useState<ImportResult | null>(null);
-  const [showImport, setShowImport] = useState(false);
   const [serverToken, setServerToken] = useState(false);
 
   // Adopt server-side defaults so a self-hosted install can skip this form.
@@ -67,14 +45,13 @@ export function CanvasPanel() {
   const selected = connection.selectedCourseIds;
 
   const connect = useCallback(async () => {
-    setBusy("connect");
+    setConnecting(true);
     setError(null);
-    setResult(null);
     try {
-      const response = await post<{ courses: CanvasCourse[] }>("/api/canvas/courses", {
-        baseUrl,
-        token,
-      });
+      const response = await postCanvas<{ courses: CanvasCourse[] }>(
+        "/api/canvas/courses",
+        { baseUrl, token },
+      );
       setCourses(response.courses);
       setCanvas({ baseUrl: baseUrl.trim(), token: token.trim() });
       if (response.courses.length > 0 && selected.length === 0) {
@@ -82,37 +59,11 @@ export function CanvasPanel() {
       }
     } catch (failure) {
       setCourses(null);
-      setError({
-        message: (failure as Error).message,
-        hint: (failure as Error & { hint?: string }).hint,
-      });
+      setError(describeError(failure));
     } finally {
-      setBusy(null);
+      setConnecting(false);
     }
   }, [baseUrl, token, setCanvas, selected.length]);
-
-  const fetchItems = useCallback(async () => {
-    setBusy("fetch");
-    setError(null);
-    setResult(null);
-    try {
-      const response = await post<{ items: CanvasItem[] }>("/api/canvas/items", {
-        baseUrl,
-        token,
-        courseIds: selected,
-        includeEvents,
-      });
-      setItems(response.items);
-      setShowImport(true);
-    } catch (failure) {
-      setError({
-        message: (failure as Error).message,
-        hint: (failure as Error & { hint?: string }).hint,
-      });
-    } finally {
-      setBusy(null);
-    }
-  }, [baseUrl, token, selected, includeEvents]);
 
   function toggleCourse(id: number) {
     const next = selected.includes(id)
@@ -195,16 +146,16 @@ export function CanvasPanel() {
           <Button
             variant="primary"
             onClick={connect}
-            disabled={!canConnect || busy !== null}
+            disabled={!canConnect || connecting || syncing}
           >
-            {busy === "connect" ? (
+            {connecting ? (
               <Spinner />
             ) : connected ? (
               <RefreshIcon size={15} />
             ) : (
               <LinkIcon size={15} />
             )}
-            {busy === "connect"
+            {connecting
               ? "Connecting…"
               : connected
                 ? "Refresh course list"
@@ -219,7 +170,6 @@ export function CanvasPanel() {
                 setBaseUrl("");
                 setToken("");
                 setCourses(null);
-                setResult(null);
                 setError(null);
               }}
             >
@@ -240,13 +190,13 @@ export function CanvasPanel() {
           </Alert>
         ) : null}
 
-        {result ? (
+        {lastResult ? (
           <Alert tone="success" title="Import finished">
             {[
-              result.created > 0 ? `${pluralize(result.created, "task")} added` : null,
-              result.updated > 0 ? `${result.updated} updated` : null,
-              result.coursesCreated > 0
-                ? `${pluralize(result.coursesCreated, "course")} created`
+              lastResult.created > 0 ? `${pluralize(lastResult.created, "task")} added` : null,
+              lastResult.updated > 0 ? `${lastResult.updated} updated` : null,
+              lastResult.coursesCreated > 0
+                ? `${pluralize(lastResult.coursesCreated, "course")} created`
                 : null,
             ]
               .filter(Boolean)
@@ -326,19 +276,19 @@ export function CanvasPanel() {
                   </p>
                 </div>
                 <Switch
-                  checked={includeEvents}
-                  onChange={setIncludeEvents}
+                  checked={connection.includeEvents}
+                  onChange={(next) => setCanvas({ includeEvents: next })}
                   label="Include course calendar events"
                 />
               </div>
 
               <Button
                 variant="primary"
-                onClick={fetchItems}
-                disabled={selected.length === 0 || busy !== null}
+                onClick={() => void sync()}
+                disabled={selected.length === 0 || connecting || syncing}
               >
-                {busy === "fetch" ? <Spinner /> : <RefreshIcon size={15} />}
-                {busy === "fetch"
+                {syncing ? <Spinner /> : <RefreshIcon size={15} />}
+                {syncing
                   ? "Loading assignments…"
                   : connection.lastSyncAt
                     ? "Sync now"
@@ -349,12 +299,6 @@ export function CanvasPanel() {
         </div>
       ) : null}
 
-      <CanvasImportDialog
-        open={showImport}
-        items={items}
-        onClose={() => setShowImport(false)}
-        onImported={setResult}
-      />
     </div>
   );
 }

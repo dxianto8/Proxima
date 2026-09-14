@@ -13,11 +13,13 @@ import { ThemeToggle } from "./theme";
 import { ContextMenu, useContextMenu } from "./ui/context-menu";
 import { ConfirmDialog } from "./ui/overlay";
 import { CourseModal } from "./course-modal";
+import { useCanvasSync } from "./canvas/sync-provider";
 import { Button } from "./ui/button";
 import { Dot } from "./ui/badge";
 import {
   ArchiveIcon,
   BookIcon,
+  CheckIcon,
   CalendarIcon,
   ChevronRightIcon,
   InboxIcon,
@@ -25,6 +27,7 @@ import {
   MenuIcon,
   PencilIcon,
   PlusIcon,
+  RefreshIcon,
   SearchIcon,
   SettingsIcon,
   SparkIcon,
@@ -360,12 +363,54 @@ function TopBar({ onMenu }: { onMenu: () => void }) {
       </form>
 
       <div className="ml-auto flex items-center gap-2">
+        <SyncButton />
         <Button variant="primary" size="md" onClick={() => openNew()}>
           <PlusIcon size={15} />
           <span className="hidden sm:inline">New task</span>
         </Button>
       </div>
     </header>
+  );
+}
+
+/**
+ * One-click Canvas sync. Only appears once a connection is saved — until then
+ * there is nothing to sync and Settings is the place to go.
+ */
+function SyncButton() {
+  const { connected, syncing, sync, lastResult, clearResult } = useCanvasSync();
+  const [justSynced, setJustSynced] = useState(false);
+
+  // A short confirmation, since the import dialog closes on its own.
+  useEffect(() => {
+    if (!lastResult) return;
+    setJustSynced(true);
+    const id = setTimeout(() => {
+      setJustSynced(false);
+      clearResult();
+    }, 2500);
+    return () => clearTimeout(id);
+  }, [lastResult, clearResult]);
+
+  if (!connected) return null;
+
+  return (
+    <Button
+      variant="secondary"
+      size="icon"
+      onClick={() => void sync()}
+      disabled={syncing}
+      aria-label={syncing ? "Syncing with Canvas" : "Sync with Canvas"}
+      title={syncing ? "Syncing with Canvas…" : "Sync with Canvas"}
+    >
+      {justSynced ? (
+        // Colour the glyph, not the button: the variant's own text colour
+        // would win the cascade against a utility added here.
+        <CheckIcon size={15} className="text-success" />
+      ) : (
+        <RefreshIcon size={15} className={cn(syncing && "animate-spin")} />
+      )}
+    </Button>
   );
 }
 
