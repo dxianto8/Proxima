@@ -50,9 +50,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => setMobileOpen(false), [pathname]);
 
   return (
-    <div className="mt-[var(--titlebar-h)] flex h-[calc(100dvh-var(--titlebar-h))] overflow-hidden bg-bg">
+    <div className="mt-[var(--titlebar-h)] flex h-[calc(100dvh-var(--titlebar-h))] overflow-hidden bg-[var(--app-bg)]">
       {/* Desktop rail */}
-      <aside className="hidden w-[248px] shrink-0 border-r border-border bg-surface lg:flex">
+      <aside className="hidden w-[248px] shrink-0 border-r border-border bg-[var(--chrome-panel)] [backdrop-filter:var(--chrome-blur)] lg:flex">
         <SidebarContent />
       </aside>
 
@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => setMobileOpen(false)}
             className="animate-fade absolute inset-0 bg-black/40 backdrop-blur-[2px]"
           />
-          <aside className="animate-fade relative flex w-[260px] border-r border-border bg-surface">
+          <aside className="animate-fade relative flex w-[260px] border-r border-border bg-[var(--chrome-panel)] [backdrop-filter:var(--chrome-blur)]">
             <SidebarContent onNavigate={() => setMobileOpen(false)} />
           </aside>
         </div>

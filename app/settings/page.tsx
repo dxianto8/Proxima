@@ -6,9 +6,8 @@ import type { AppData } from "@/lib/types";
 import { pluralize } from "@/lib/utils";
 import { PageContainer, PageHeader } from "@/components/app-shell";
 import { CanvasPanel } from "@/components/canvas/canvas-panel";
-import { ThemeToggle } from "@/components/theme";
+import { AppearancePanel } from "@/components/appearance/appearance-panel";
 import { Button } from "@/components/ui/button";
-import { Segmented } from "@/components/ui/segmented";
 import { Alert } from "@/components/ui/alert";
 import { ConfirmDialog } from "@/components/ui/overlay";
 import { PageSkeleton } from "@/components/ui/skeleton";
@@ -66,25 +65,11 @@ export default function SettingsPage() {
         </section>
 
         <section>
-          <SectionTitle title="Appearance" />
-          <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-card">
-            <Row label="Theme" hint="Follow your system, or pin light or dark.">
-              <ThemeToggle />
-            </Row>
-            <Row label="Week starts on" hint="Applies to the calendar grid.">
-              <Segmented<"0" | "1">
-                ariaLabel="Week starts on"
-                value={String(data.preferences.weekStartsOn) as "0" | "1"}
-                onChange={(value) =>
-                  setPreferences({ weekStartsOn: Number(value) as 0 | 1 })
-                }
-                options={[
-                  { value: "0", label: "Sunday" },
-                  { value: "1", label: "Monday" },
-                ]}
-              />
-            </Row>
-          </div>
+          <SectionTitle
+            title="Appearance"
+            body="Make it yours — pick an accent, or drop in a background and let Proxima build a palette from it."
+          />
+          <AppearancePanel />
         </section>
 
         <section>
@@ -165,26 +150,6 @@ function SectionTitle({ title, body }: { title: string; body?: string }) {
       {body ? (
         <p className="mt-0.5 max-w-2xl text-[13px] leading-relaxed text-muted">{body}</p>
       ) : null}
-    </div>
-  );
-}
-
-function Row({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-      <div>
-        <p className="text-[13.5px] text-text">{label}</p>
-        {hint ? <p className="text-[12px] text-subtle">{hint}</p> : null}
-      </div>
-      {children}
     </div>
   );
 }

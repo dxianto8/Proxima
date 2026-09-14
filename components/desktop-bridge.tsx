@@ -60,7 +60,7 @@ export function DesktopTitlebar() {
   return (
     <div
       aria-hidden
-      className="fixed inset-x-0 top-0 z-40 h-[var(--titlebar-h)] bg-bg"
+      className="fixed inset-x-0 top-0 z-40 h-[var(--titlebar-h)] bg-[var(--chrome-bar)] [backdrop-filter:var(--chrome-blur)]"
       style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
     />
   );

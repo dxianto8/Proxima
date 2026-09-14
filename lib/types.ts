@@ -57,11 +57,28 @@ export interface CanvasConnection {
 
 export type ThemePreference = "system" | "light" | "dark";
 
+/**
+ * A derived theme. The seed is kept so the picker can show what is selected;
+ * the two variable maps are what actually get applied, precomputed so the
+ * before-paint script can set them without doing colour maths.
+ */
+export interface CustomTheme {
+  seed: string;
+  light: Record<string, string>;
+  dark: Record<string, string>;
+}
+
 export interface Preferences {
   theme: ThemePreference;
   /** 0 = Sunday, 1 = Monday. */
   weekStartsOn: 0 | 1;
   showCompleted: boolean;
+  /** null keeps the built-in indigo palette. */
+  customTheme: CustomTheme | null;
+  /** Scrim over the background image, 0–100. Higher is more readable. */
+  backgroundDim: number;
+  /** Colours pulled from the background image, offered in the picker. */
+  extractedColors: string[];
 }
 
 export interface AppData {
