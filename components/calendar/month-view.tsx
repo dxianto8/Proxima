@@ -90,24 +90,30 @@ export function MonthView({
                   if (taskId) onReschedule(taskId, day);
                 }}
                 className={cn(
-                  "relative flex min-h-[106px] cursor-pointer flex-col gap-1 p-1.5",
+                  "group/day relative flex min-h-[106px] cursor-pointer flex-col gap-1 p-1.5",
                   "border-border transition-colors duration-100",
                   dayIndex < 6 && "border-r",
                   weekIndex < weeks.length - 1 && "border-b",
                   outside ? "bg-surface-2/35" : "bg-surface",
-                  isSelected && "bg-accent-soft/60",
+                  isSelected && "bg-accent-soft/30",
                   dragOver === key && "bg-accent-soft ring-1 ring-inset ring-accent",
                 )}
               >
                 <div className="flex items-center justify-between px-0.5">
                   <span
                     className={cn(
-                      "tabular grid h-[22px] min-w-[22px] place-items-center rounded-full px-1 text-[12px]",
+                      "tabular grid h-[22px] min-w-[22px] place-items-center rounded-full px-1",
+                      "text-[12px] transition-colors duration-100",
+                      // Three steps, darkest first: today, the selected day,
+                      // then whichever day the cursor is over.
                       today
                         ? "bg-accent font-semibold text-accent-text"
-                        : outside
-                          ? "text-subtle/70"
-                          : "font-medium text-muted",
+                        : isSelected
+                          ? "bg-day-selected font-semibold text-accent"
+                          : cn(
+                              "group-hover/day:bg-day-hover",
+                              outside ? "text-subtle/70" : "font-medium text-muted",
+                            ),
                     )}
                   >
                     {day.getDate()}

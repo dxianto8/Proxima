@@ -212,6 +212,20 @@ export const FilterIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const PencilIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 20h4l10-10a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5 4 20Z" />
+    <path d="m13.5 7 3.5 3.5" />
+  </Icon>
+);
+
+export const ArchiveIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="4" width="18" height="4.5" rx="1.5" />
+    <path d="M5 8.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19V8.5M10 12.5h4" />
+  </Icon>
+);
+
 export const PlayIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M8 5.5v13l10.5-6.5L8 5.5Z" />

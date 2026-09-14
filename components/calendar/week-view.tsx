@@ -62,10 +62,10 @@ export function WeekView({
                 if (taskId) onReschedule(taskId, day);
               }}
               className={cn(
-                "flex min-h-[120px] cursor-pointer flex-col gap-1.5 border-b border-border p-2",
+                "group/day flex min-h-[120px] cursor-pointer flex-col gap-1.5 border-b border-border p-2",
                 "sm:min-h-[420px] sm:border-b-0 sm:border-r",
                 index === 6 && "border-b-0 sm:border-r-0",
-                isSelected && "bg-accent-soft/50",
+                isSelected && "bg-accent-soft/30",
                 dragOver === key && "bg-accent-soft ring-1 ring-inset ring-accent",
               )}
             >
@@ -75,10 +75,13 @@ export function WeekView({
                 </span>
                 <span
                   className={cn(
-                    "tabular grid h-[24px] min-w-[24px] place-items-center rounded-full text-[13px]",
+                    "tabular grid h-[24px] min-w-[24px] place-items-center rounded-full",
+                    "text-[13px] transition-colors duration-100",
                     today
                       ? "bg-accent font-semibold text-accent-text"
-                      : "font-medium text-text",
+                      : isSelected
+                        ? "bg-day-selected font-semibold text-accent"
+                        : "font-medium text-text group-hover/day:bg-day-hover",
                   )}
                 >
                   {day.getDate()}
