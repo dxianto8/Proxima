@@ -6,7 +6,7 @@ import { parseQuickAdd } from "@/lib/parse";
 import { useTaskEditor } from "./task-editor";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { PlusIcon, SettingsIcon } from "./icons";
+import { PlusIcon } from "./icons";
 
 /**
  * The always-available capture box. Typing a plain sentence works; the parser
@@ -37,6 +37,24 @@ export function QuickAdd({
     [value, data.courses],
   );
 
+  /** Hands the current line (parsed, if there is one) to the full editor. */
+  function openEditor() {
+    const draft = value.trim() ? parseQuickAdd(value, data.courses) : null;
+    openNew(
+      draft
+        ? {
+            title: draft.title,
+            dueAt: draft.dueAt ?? defaultDueAt,
+            hasDueTime: draft.hasDueTime,
+            priority: draft.priority,
+            courseId: draft.courseId ?? defaultCourseId,
+            estimateMinutes: draft.estimateMinutes,
+          }
+        : { dueAt: defaultDueAt, courseId: defaultCourseId },
+    );
+    setValue("");
+  }
+
   function submit() {
     const draft = parseQuickAdd(value, data.courses);
     if (!draft.title) return;
@@ -65,13 +83,20 @@ export function QuickAdd({
             : "border-border hover:border-border-strong",
         )}
       >
-        <PlusIcon
-          size={17}
+        <button
+          type="button"
+          aria-label="Open the full task editor"
+          title="Open the full task editor"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={openEditor}
           className={cn(
-            "shrink-0 transition-colors",
+            "-ml-1 grid h-7 w-7 shrink-0 place-items-center rounded-lg transition-colors duration-150",
+            "hover:bg-surface-2 hover:text-accent active:scale-95",
             focused ? "text-accent" : "text-subtle",
           )}
-        />
+        >
+          <PlusIcon size={17} />
+        </button>
         <input
           ref={inputRef}
           data-quick-add
@@ -93,36 +118,14 @@ export function QuickAdd({
           className="h-11 min-w-0 flex-1 bg-transparent text-[14px] text-text outline-none placeholder:text-subtle"
         />
         {value.trim() ? (
-          <>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Open full editor"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => {
-                const draft = parseQuickAdd(value, data.courses);
-                openNew({
-                  title: draft.title,
-                  dueAt: draft.dueAt ?? defaultDueAt,
-                  hasDueTime: draft.hasDueTime,
-                  priority: draft.priority,
-                  courseId: draft.courseId ?? defaultCourseId,
-                  estimateMinutes: draft.estimateMinutes,
-                });
-                setValue("");
-              }}
-            >
-              <SettingsIcon size={15} />
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={submit}
-            >
-              Add
-            </Button>
-          </>
+          <Button
+            variant="primary"
+            size="sm"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={submit}
+          >
+            Add
+          </Button>
         ) : null}
       </div>
 

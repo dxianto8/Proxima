@@ -4,24 +4,32 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
+import type { Course } from "@/lib/types";
 import { useTaskEditor } from "./task-editor";
 import { openTaskCount, summarize } from "@/lib/selectors";
 import { colorHex } from "@/lib/colors";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme";
+import { ContextMenu, useContextMenu } from "./ui/context-menu";
+import { ConfirmDialog } from "./ui/overlay";
+import { CourseModal } from "./course-modal";
 import { Button } from "./ui/button";
 import { Dot } from "./ui/badge";
 import {
+  ArchiveIcon,
   BookIcon,
   CalendarIcon,
+  ChevronRightIcon,
   InboxIcon,
   LayersIcon,
   MenuIcon,
+  PencilIcon,
   PlusIcon,
   SearchIcon,
   SettingsIcon,
   SparkIcon,
   SunriseIcon,
+  TrashIcon,
   XIcon,
 } from "./icons";
 
@@ -68,9 +76,52 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
-  const { data } = useStore();
+  const { data, updateCourse, deleteCourse } = useStore();
   const pathname = usePathname();
+  const router = useRouter();
+  const { openNew } = useTaskEditor();
   const summary = useMemo(() => summarize(data.tasks), [data.tasks]);
+
+  // Right-click on a course opens the same actions the Courses page offers.
+  const menu = useContextMenu<Course>();
+  const [editing, setEditing] = useState<Course | null>(null);
+  const [deleting, setDeleting] = useState<Course | null>(null);
+
+  function courseMenuItems(course: Course) {
+    return [
+      {
+        label: "Open course",
+        icon: <ChevronRightIcon size={14} />,
+        onSelect: () => {
+          router.push(`/courses/${course.id}`);
+          onNavigate?.();
+        },
+      },
+      {
+        label: "Add task to course",
+        icon: <PlusIcon size={14} />,
+        onSelect: () => openNew({ courseId: course.id }),
+      },
+      {
+        label: "Edit course…",
+        icon: <PencilIcon size={14} />,
+        separated: true,
+        onSelect: () => setEditing(course),
+      },
+      {
+        label: course.archived ? "Unarchive" : "Archive",
+        icon: <ArchiveIcon size={14} />,
+        onSelect: () => updateCourse(course.id, { archived: !course.archived }),
+      },
+      {
+        label: "Delete course…",
+        icon: <TrashIcon size={14} />,
+        danger: true,
+        separated: true,
+        onSelect: () => setDeleting(course),
+      },
+    ];
+  }
 
   const activeCourses = data.courses
     .filter((course) => !course.archived)
@@ -160,9 +211,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 key={course.id}
                 href={`/courses/${course.id}`}
                 onClick={onNavigate}
+                onContextMenu={(event) => menu.open(event, course)}
                 className={cn(
                   "flex items-center gap-2.5 rounded-lg px-2.5 py-[6px] text-[13px] transition-colors duration-100",
-                  pathname === `/courses/${course.id}`
+                  pathname === `/courses/${course.id}` || menu.state?.target.id === course.id
                     ? "bg-surface-2 font-medium text-text"
                     : "text-muted hover:bg-surface-2 hover:text-text",
                 )}
@@ -177,6 +229,29 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           )}
         </div>
       </div>
+
+      <ContextMenu
+        label={menu.state ? `Actions for ${menu.state.target.name}` : undefined}
+        position={menu.state?.position ?? null}
+        onClose={menu.close}
+        items={menu.state ? courseMenuItems(menu.state.target) : []}
+      />
+
+      <CourseModal
+        key={editing?.id ?? "none"}
+        open={Boolean(editing)}
+        course={editing}
+        onClose={() => setEditing(null)}
+        onSubmit={(values) => editing && updateCourse(editing.id, values)}
+      />
+
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        onClose={() => setDeleting(null)}
+        onConfirm={() => deleting && deleteCourse(deleting.id)}
+        title={`Delete ${deleting?.name ?? "course"}?`}
+        body="Its tasks stay, but they lose their course tag. If it came from Canvas, syncing again will recreate it."
+      />
 
       <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-3">
         <Link
