@@ -150,6 +150,24 @@ sentence always works.
 Keyboard: `N` for a new task, `/` to search, `Enter` to add what you're typing,
 `Esc` to close a panel.
 
+## Making it yours
+
+**Settings → Appearance** has an accent picker: ten presets, or any colour you
+like. Light and dark are derived separately from whatever you choose, so both
+stay readable — the accent is pinned to a sensible lightness for each mode and
+only the hue carries over, and surfaces take a whisper of the same hue rather
+than a wash of it.
+
+You can also upload a background image. Proxima reads the colours out of it,
+offers them as swatches, and picks the most usable one as your accent. The
+image is downscaled and stored in this browser — it is never uploaded anywhere.
+A **Fade** slider controls the scrim over it; brighter pictures start with more
+fade, and cards stay opaque so text never sits on a photo.
+
+The wallpaper is kept under its own storage key rather than inside the main
+data blob, so a picture too large to save can never put your tasks at risk. It
+is not part of the JSON backup for the same reason.
+
 ## Your data
 
 Tasks, courses and the Canvas connection are stored in this browser's
@@ -184,6 +202,8 @@ desktop/
   preload.js     the only renderer bridge (platform + menu commands)
 lib/
   store.tsx      the localStorage-backed store and its actions
+  color.ts       OKLab/OKLCH maths and the palette derivation
+  image-palette.ts   pulls representative colours out of an uploaded image
   canvas.ts      Canvas REST client: pagination, normalising, error messages
   parse.ts       the quick-add parser
   selectors.ts   filtering, sorting, grouping, summaries

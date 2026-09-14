@@ -27,6 +27,9 @@ export const DEFAULT_PREFERENCES: Preferences = {
   theme: "system",
   weekStartsOn: 0,
   showCompleted: false,
+  customTheme: null,
+  backgroundDim: 72,
+  extractedColors: [],
 };
 
 const DEFAULT_CANVAS: CanvasConnection = {

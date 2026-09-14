@@ -39,6 +39,25 @@ A local-first coursework task tracker: tasks, a calendar, and Canvas
 - Dates are local-time throughout. Canvas hands back UTC ISO strings and they're
   converted once, in `lib/date.ts`.
 
+## Theming
+
+`lib/color.ts` derives a whole palette from one seed colour, in OKLab rather
+than HSL so lightness moves evenly across hues. `buildTheme` pins the accent to
+a fixed lightness per mode and keeps only the seed's hue with capped chroma, so
+any seed — a pale sky or a near-black navy — lands somewhere usable. Surfaces
+get chroma of at most 0.015; anything more and body text starts sitting on a
+coloured ground.
+
+Derived themes are stored as precomputed CSS-variable maps for both modes, not
+as a seed, so `ThemeScript` can apply them before first paint without running
+colour maths inline. If you add a themed variable, add it to `THEMED_VARS` in
+`components/theme.tsx` too — that list is what gets cleared when someone resets.
+
+The background image lives under its own localStorage key
+(`lib/background-store.ts`), never inside the main data blob: a photo is orders
+of magnitude larger than everything else, and a quota failure while saving a
+wallpaper must not be able to cost someone their tasks.
+
 ## Checks
 
 `npm run check` runs the typechecker and the unit tests. `npm run build` must
