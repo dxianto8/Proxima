@@ -33,6 +33,7 @@ const DEFAULT_CANVAS: CanvasConnection = {
   baseUrl: "",
   token: "",
   selectedCourseIds: [],
+  includeEvents: false,
   lastSyncAt: null,
 };
 

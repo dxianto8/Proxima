@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTaskEditor } from "./task-editor";
+import { useCanvasSync } from "./canvas/sync-provider";
 
 interface DesktopApi {
   isDesktop: true;
@@ -24,6 +25,7 @@ declare global {
 export function DesktopBridge() {
   const router = useRouter();
   const { openNew } = useTaskEditor();
+  const { sync } = useCanvasSync();
 
   useEffect(() => {
     const api = window.proxima;
@@ -35,6 +37,8 @@ export function DesktopBridge() {
     return api.onMenuCommand((command) => {
       if (command === "new-task") {
         openNew();
+      } else if (command === "sync") {
+        void sync();
       } else if (command === "search") {
         const search = document.querySelector<HTMLInputElement>('input[aria-label="Search tasks"]');
         search?.focus();
@@ -43,7 +47,7 @@ export function DesktopBridge() {
         router.push(command.slice(3));
       }
     });
-  }, [router, openNew]);
+  }, [router, openNew, sync]);
 
   return null;
 }

@@ -4,6 +4,7 @@ import "./globals.css";
 import { StoreProvider } from "@/lib/store";
 import { ThemeScript, ThemeSync } from "@/components/theme";
 import { TaskEditorProvider } from "@/components/task-editor";
+import { CanvasSyncProvider } from "@/components/canvas/sync-provider";
 import { AppShell } from "@/components/app-shell";
 import { DesktopBridge, DesktopTitlebar } from "@/components/desktop-bridge";
 
@@ -44,9 +45,11 @@ export default function RootLayout({
         <StoreProvider>
           <ThemeSync />
           <TaskEditorProvider>
-            <DesktopBridge />
-            <DesktopTitlebar />
-            <AppShell>{children}</AppShell>
+            <CanvasSyncProvider>
+              <DesktopBridge />
+              <DesktopTitlebar />
+              <AppShell>{children}</AppShell>
+            </CanvasSyncProvider>
           </TaskEditorProvider>
         </StoreProvider>
       </body>

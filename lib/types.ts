@@ -50,6 +50,8 @@ export interface CanvasConnection {
   token: string;
   /** Canvas course ids the user opted into syncing. */
   selectedCourseIds: number[];
+  /** Pull course calendar events alongside graded work. */
+  includeEvents: boolean;
   lastSyncAt: string | null;
 }
 
