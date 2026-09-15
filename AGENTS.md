@@ -58,6 +58,22 @@ The background image lives under its own localStorage key
 of magnitude larger than everything else, and a quota failure while saving a
 wallpaper must not be able to cost someone their tasks.
 
+## Groups and ordering
+
+The sidebar is a list of user-named `Group`s; every `Course` carries a
+`groupId` and an `order`. The ordering logic lives in `lib/groups.ts` — pure,
+React-free, and unit tested — with `store.tsx` doing nothing but calling it.
+Keep new ordering rules there rather than inline in the store.
+
+Two invariants the helpers maintain, and that tests assert: `order` is always
+contiguous from 0 within a group (no gaps accumulate across moves), and every
+course points at a group that exists. `reconcile()` enforces both when data is
+read, which is also how records saved before groups existed get adopted into
+the first group, keeping the order they were listed in. It is idempotent.
+
+Deleting a group never deletes its contents — they move to the first remaining
+group — and the last group cannot be deleted, since courses need a home.
+
 ## Checks
 
 `npm run check` runs the typechecker and the unit tests. `npm run build` must

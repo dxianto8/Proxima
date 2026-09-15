@@ -15,6 +15,8 @@ const COURSES: Course[] = [
     canvasId: 1,
     archived: false,
     createdAt: NOW.toISOString(),
+    groupId: "g1",
+    order: 0,
   },
   {
     id: "c2",
@@ -24,6 +26,8 @@ const COURSES: Course[] = [
     canvasId: null,
     archived: false,
     createdAt: NOW.toISOString(),
+    groupId: "g1",
+    order: 1,
   },
   {
     id: "c3",
@@ -33,6 +37,8 @@ const COURSES: Course[] = [
     canvasId: null,
     archived: true,
     createdAt: NOW.toISOString(),
+    groupId: "g1",
+    order: 2,
   },
 ];
 

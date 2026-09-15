@@ -14,10 +14,19 @@ import type {
   CanvasConnection,
   CanvasItem,
   Course,
+  Group,
   Preferences,
   Task,
 } from "./types";
 import { colorForIndex } from "./colors";
+import {
+  coursesInGroup,
+  moveCourse as moveCourseIn,
+  reconcile,
+  reindex,
+  removeGroup,
+  reorderGroups,
+} from "./groups";
 import { htmlToText, uid } from "./utils";
 
 const STORAGE_KEY = "proxima.data.v1";
@@ -40,10 +49,23 @@ const DEFAULT_CANVAS: CanvasConnection = {
   lastSyncAt: null,
 };
 
+/** The section every course lands in until the user makes others. */
+export const DEFAULT_GROUP_NAME = "Courses";
+
+function defaultGroup(): Group {
+  return {
+    id: uid("group"),
+    name: DEFAULT_GROUP_NAME,
+    order: 0,
+    createdAt: new Date().toISOString(),
+  };
+}
+
 function emptyData(): AppData {
   return {
     version: SCHEMA_VERSION,
     tasks: [],
+    groups: [defaultGroup()],
     courses: [],
     canvas: { ...DEFAULT_CANVAS },
     preferences: { ...DEFAULT_PREFERENCES },
@@ -55,10 +77,18 @@ function normalize(raw: unknown): AppData {
   const base = emptyData();
   if (!raw || typeof raw !== "object") return base;
   const input = raw as Partial<AppData>;
+
+  const { groups, courses } = reconcile(
+    Array.isArray(input.groups) ? input.groups.filter(isGroup) : [],
+    Array.isArray(input.courses) ? input.courses.filter(isCourse) : [],
+    base.groups[0],
+  );
+
   return {
     version: SCHEMA_VERSION,
     tasks: Array.isArray(input.tasks) ? input.tasks.filter(isTask) : [],
-    courses: Array.isArray(input.courses) ? input.courses.filter(isCourse) : [],
+    groups,
+    courses,
     canvas: { ...base.canvas, ...(input.canvas ?? {}) },
     preferences: { ...base.preferences, ...(input.preferences ?? {}) },
   };
@@ -70,6 +100,15 @@ function isTask(value: unknown): value is Task {
     typeof value === "object" &&
     typeof (value as Task).id === "string" &&
     typeof (value as Task).title === "string"
+  );
+}
+
+function isGroup(value: unknown): value is Group {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    typeof (value as Group).id === "string" &&
+    typeof (value as Group).name === "string"
   );
 }
 
@@ -111,6 +150,12 @@ interface StoreValue {
   addCourse: (course: Partial<Course> & Pick<Course, "name">) => Course;
   updateCourse: (id: string, patch: Partial<Course>) => void;
   deleteCourse: (id: string) => void;
+  /* groups */
+  addGroup: (name: string) => void;
+  updateGroup: (id: string, patch: Partial<Group>) => void;
+  deleteGroup: (id: string) => void;
+  moveGroup: (id: string, direction: -1 | 1) => void;
+  moveCourse: (courseId: string, groupId: string, index: number) => void;
   /* canvas + prefs */
   setCanvas: (patch: Partial<CanvasConnection>) => void;
   setPreferences: (patch: Partial<Preferences>) => void;
@@ -234,14 +279,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         canvasId: input.canvasId ?? null,
         archived: false,
         createdAt: new Date().toISOString(),
+        groupId: input.groupId ?? "",
+        order: 0,
       };
-      setData((prev) => ({
-        ...prev,
-        courses: [
-          ...prev.courses,
-          input.color ? course : { ...course, color: colorForIndex(prev.courses.length) },
-        ],
-      }));
+      setData((prev) => {
+        const groupId =
+          input.groupId && prev.groups.some((g) => g.id === input.groupId)
+            ? input.groupId
+            : prev.groups[0].id;
+        const order = coursesInGroup(prev.courses, groupId).length;
+        return {
+          ...prev,
+          courses: [
+            ...prev.courses,
+            {
+              ...course,
+              groupId,
+              order,
+              color: input.color ?? colorForIndex(prev.courses.length),
+            },
+          ],
+        };
+      });
       return course;
     },
     [],
@@ -256,12 +315,69 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   /** Deleting a course leaves its tasks in place, just uncategorised. */
   const deleteCourse = useCallback((id: string) => {
+    setData((prev) => {
+      const removed = prev.courses.find((c) => c.id === id);
+      const courses = prev.courses.filter((c) => c.id !== id);
+      return {
+        ...prev,
+        courses: removed ? reindex(courses, removed.groupId) : courses,
+        tasks: prev.tasks.map((t) => (t.courseId === id ? { ...t, courseId: null } : t)),
+      };
+    });
+  }, []);
+
+  /* ---------------------------------------------------------------- groups */
+
+  const addGroup = useCallback((name: string): void => {
     setData((prev) => ({
       ...prev,
-      courses: prev.courses.filter((c) => c.id !== id),
-      tasks: prev.tasks.map((t) => (t.courseId === id ? { ...t, courseId: null } : t)),
+      groups: [
+        ...prev.groups,
+        {
+          id: uid("group"),
+          name: name.trim() || "Untitled",
+          order: prev.groups.length,
+          createdAt: new Date().toISOString(),
+        },
+      ],
     }));
   }, []);
+
+  const updateGroup = useCallback((id: string, patch: Partial<Group>) => {
+    setData((prev) => ({
+      ...prev,
+      groups: prev.groups.map((group) => (group.id === id ? { ...group, ...patch } : group)),
+    }));
+  }, []);
+
+  /**
+   * Removing a group keeps everything in it — the courses move to the first
+   * remaining group rather than disappearing with the heading. The last group
+   * cannot be removed, since courses need somewhere to live.
+   */
+  const deleteGroup = useCallback((id: string) => {
+    setData((prev) => ({ ...prev, ...removeGroup(prev.groups, prev.courses, id) }));
+  }, []);
+
+  /** Nudges a group one slot up (-1) or down (+1) in the sidebar. */
+  const moveGroup = useCallback((id: string, direction: -1 | 1) => {
+    setData((prev) => ({ ...prev, groups: reorderGroups(prev.groups, id, direction) }));
+  }, []);
+
+  /**
+   * Drops a course at `index` within `groupId`, whether it came from that group
+   * or another one. Both the source and destination are renumbered so orders
+   * stay contiguous.
+   */
+  const moveCourse = useCallback(
+    (courseId: string, groupId: string, index: number) => {
+      setData((prev) => ({
+        ...prev,
+        courses: moveCourseIn(prev.courses, prev.groups, courseId, groupId, index),
+      }));
+    },
+    [],
+  );
 
   const setCanvas = useCallback((patch: Partial<CanvasConnection>) => {
     setData((prev) => ({ ...prev, canvas: { ...prev.canvas, ...patch } }));
@@ -283,6 +399,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           courses.filter((c) => c.canvasId !== null).map((c) => [c.canvasId as number, c]),
         );
 
+        // Imported courses join the first group, which is "Courses" unless the
+        // user has reordered their sidebar.
+        const importGroupId = prev.groups[0].id;
+
         function courseFor(canvasCourseId: number, name: string): string {
           const existing = byCanvasId.get(canvasCourseId);
           if (existing) return existing.id;
@@ -294,6 +414,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             canvasId: canvasCourseId,
             archived: false,
             createdAt: new Date().toISOString(),
+            groupId: importGroupId,
+            order: coursesInGroup(courses, importGroupId).length,
           };
           courses.push(created);
           byCanvasId.set(canvasCourseId, created);
@@ -391,6 +513,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       addCourse,
       updateCourse,
       deleteCourse,
+      addGroup,
+      updateGroup,
+      deleteGroup,
+      moveGroup,
+      moveCourse,
       setCanvas,
       setPreferences,
       importCanvasItems,
@@ -408,6 +535,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       addCourse,
       updateCourse,
       deleteCourse,
+      addGroup,
+      updateGroup,
+      deleteGroup,
+      moveGroup,
+      moveCourse,
       setCanvas,
       setPreferences,
       importCanvasItems,

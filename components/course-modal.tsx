@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { Course } from "@/lib/types";
+import type { Course, Group } from "@/lib/types";
 import { Modal } from "./ui/overlay";
 import { Button } from "./ui/button";
-import { Field, Input } from "./ui/field";
+import { Field, Input, Select } from "./ui/field";
 import { ColorPicker } from "./color-picker";
 
 export interface CourseValues {
@@ -12,6 +12,7 @@ export interface CourseValues {
   code: string;
   color: string;
   archived?: boolean;
+  groupId?: string;
 }
 
 /**
@@ -22,11 +23,16 @@ export interface CourseValues {
 export function CourseModal({
   open,
   course,
+  groups,
+  defaultGroupId,
   onClose,
   onSubmit,
 }: {
   open: boolean;
-  course?: Pick<Course, "name" | "code" | "color" | "archived"> | null;
+  course?: Pick<Course, "name" | "code" | "color" | "archived" | "groupId"> | null;
+  /** Omit to hide the group picker (the Courses page passes them). */
+  groups?: Group[];
+  defaultGroupId?: string;
   onClose: () => void;
   onSubmit: (values: CourseValues) => void;
 }) {
@@ -34,10 +40,19 @@ export function CourseModal({
   const [code, setCode] = useState(course?.code ?? "");
   const [color, setColor] = useState(course?.color ?? "indigo");
   const [archived, setArchived] = useState(course?.archived ?? false);
+  const [groupId, setGroupId] = useState(
+    course?.groupId ?? defaultGroupId ?? groups?.[0]?.id ?? "",
+  );
 
   function submit() {
     if (!name.trim()) return;
-    onSubmit({ name: name.trim(), code: code.trim(), color, archived });
+    onSubmit({
+      name: name.trim(),
+      code: code.trim(),
+      color,
+      archived,
+      ...(groupId ? { groupId } : {}),
+    });
     onClose();
     if (!course) {
       setName("");
@@ -89,6 +104,21 @@ export function CourseModal({
         <Field label="Colour">
           <ColorPicker value={color} onChange={setColor} className="pt-1" />
         </Field>
+        {groups && groups.length > 0 ? (
+          <Field label="Group" htmlFor="course-group" hint="Which sidebar section it sits in.">
+            <Select
+              id="course-group"
+              value={groupId}
+              onChange={(event) => setGroupId(event.target.value)}
+            >
+              {groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        ) : null}
         {course ? (
           <label className="flex items-center gap-2 text-[13px] text-muted">
             <input
