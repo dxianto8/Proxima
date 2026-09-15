@@ -15,7 +15,8 @@ npm install
 npm run dev
 ```
 
-Then open <http://localhost:3000>.
+Then open <http://localhost:3000>. That's the landing page; **Open Proxima**
+takes you into the app at `/today`.
 
 ## Importing from Canvas
 
@@ -138,6 +139,9 @@ sentence always works.
 
 ## Around the app
 
+- **`/`** — the landing page. It sits outside the app's chrome, and the button
+  reads *Back to your tasks* once you have some.
+
 - **Today** — what's overdue, what's due today, and what you've already closed out.
 - **Upcoming** — the next 7, 14 or 30 days, grouped by day.
 - **All tasks** — search and filter by course, priority and status.
@@ -197,7 +201,9 @@ clears it. **Settings → Your data** exports a JSON backup and restores one.
 
 ```
 app/
-  today/ upcoming/ tasks/ calendar/ courses/ settings/   pages (client-rendered)
+  page.tsx                                               landing page (no app chrome)
+  (app)/                                                 the product, wrapped in AppShell
+    today/ upcoming/ tasks/ calendar/ courses/ settings/
   api/canvas/                                            Canvas proxy routes
 components/                                              UI, calendar, Canvas panel
 desktop/
