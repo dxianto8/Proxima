@@ -143,9 +143,12 @@ sentence always works.
 - **All tasks** — search and filter by course, priority and status.
 - **Calendar** — month and week views. Drag a task onto another day to
   reschedule it; the time of day is preserved.
-- **Courses** — colour-coded groups with progress. Canvas courses appear here
-  automatically after a sync. Right-click one in the sidebar to open it, add a
-  task to it, edit, archive or delete it.
+- **Courses & groups** — the sidebar is organised into named groups. You start
+  with one called *Courses*; add your own for clubs, a job, personal projects,
+  anything. Drag entries to reorder them, or drag one into another group.
+  Right-click an entry to open it, add a task, edit, move, archive or delete it;
+  right-click a group heading to rename it, reorder it, or remove it — anything
+  inside moves to the first group rather than disappearing with the heading.
 
 Keyboard: `N` for a new task, `/` to search, `Enter` to add what you're typing,
 `Esc` to close a panel.

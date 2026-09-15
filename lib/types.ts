@@ -34,6 +34,18 @@ export interface Task {
   canvas?: CanvasMeta;
 }
 
+/**
+ * A named sidebar section. Courses live in one; beyond coursework people use
+ * them for clubs, jobs, personal projects — whatever they name it.
+ */
+export interface Group {
+  id: string;
+  name: string;
+  /** Position in the sidebar, ascending. */
+  order: number;
+  createdAt: string;
+}
+
 export interface Course {
   id: string;
   name: string;
@@ -43,6 +55,10 @@ export interface Course {
   canvasId: number | null;
   archived: boolean;
   createdAt: string;
+  /** The group this sits in. Always valid after normalize(). */
+  groupId: string;
+  /** Position within its group, ascending and contiguous. */
+  order: number;
 }
 
 export interface CanvasConnection {
@@ -84,6 +100,7 @@ export interface Preferences {
 export interface AppData {
   version: number;
   tasks: Task[];
+  groups: Group[];
   courses: Course[];
   canvas: CanvasConnection;
   preferences: Preferences;

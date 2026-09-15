@@ -4,18 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
-import type { Course } from "@/lib/types";
 import { useTaskEditor } from "./task-editor";
-import { openTaskCount, summarize } from "@/lib/selectors";
-import { colorHex } from "@/lib/colors";
+import { summarize } from "@/lib/selectors";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme";
-import { ContextMenu, useContextMenu } from "./ui/context-menu";
-import { ConfirmDialog } from "./ui/overlay";
-import { CourseModal } from "./course-modal";
+import { SidebarGroups } from "./sidebar-groups";
 import { useCanvasSync } from "./canvas/sync-provider";
 import { Button } from "./ui/button";
-import { Dot } from "./ui/badge";
 import {
   ArchiveIcon,
   BookIcon,
@@ -79,57 +74,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
-  const { data, updateCourse, deleteCourse } = useStore();
+  const { data } = useStore();
   const pathname = usePathname();
-  const router = useRouter();
-  const { openNew } = useTaskEditor();
   const summary = useMemo(() => summarize(data.tasks), [data.tasks]);
-
-  // Right-click on a course opens the same actions the Courses page offers.
-  const menu = useContextMenu<Course>();
-  const [editing, setEditing] = useState<Course | null>(null);
-  const [deleting, setDeleting] = useState<Course | null>(null);
-
-  function courseMenuItems(course: Course) {
-    return [
-      {
-        label: "Open course",
-        icon: <ChevronRightIcon size={14} />,
-        onSelect: () => {
-          router.push(`/courses/${course.id}`);
-          onNavigate?.();
-        },
-      },
-      {
-        label: "Add task to course",
-        icon: <PlusIcon size={14} />,
-        onSelect: () => openNew({ courseId: course.id }),
-      },
-      {
-        label: "Edit course…",
-        icon: <PencilIcon size={14} />,
-        separated: true,
-        onSelect: () => setEditing(course),
-      },
-      {
-        label: course.archived ? "Unarchive" : "Archive",
-        icon: <ArchiveIcon size={14} />,
-        onSelect: () => updateCourse(course.id, { archived: !course.archived }),
-      },
-      {
-        label: "Delete course…",
-        icon: <TrashIcon size={14} />,
-        danger: true,
-        separated: true,
-        onSelect: () => setDeleting(course),
-      },
-    ];
-  }
-
-  const activeCourses = data.courses
-    .filter((course) => !course.archived)
-    .map((course) => ({ course, open: openTaskCount(data.tasks, course.id) }))
-    .sort((a, b) => b.open - a.open || a.course.name.localeCompare(b.course.name));
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -184,77 +131,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </nav>
 
-      <div className="mt-6 flex min-h-0 flex-1 flex-col px-2.5">
-        <div className="flex items-center justify-between px-2.5 pb-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-subtle">
-            Courses
-          </span>
-          <Link
-            href="/courses"
-            onClick={onNavigate}
-            className="text-[11px] font-medium text-subtle transition-colors hover:text-accent"
-          >
-            Manage
-          </Link>
-        </div>
-
-        <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto pb-2">
-          {activeCourses.length === 0 ? (
-            <Link
-              href="/settings"
-              onClick={onNavigate}
-              className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-subtle hover:bg-surface-2 hover:text-text"
-            >
-              <BookIcon size={15} />
-              Import from Canvas
-            </Link>
-          ) : (
-            activeCourses.map(({ course, open }) => (
-              <Link
-                key={course.id}
-                href={`/courses/${course.id}`}
-                onClick={onNavigate}
-                onContextMenu={(event) => menu.open(event, course)}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-2.5 py-[6px] text-[13px] transition-colors duration-100",
-                  pathname === `/courses/${course.id}` || menu.state?.target.id === course.id
-                    ? "bg-surface-2 font-medium text-text"
-                    : "text-muted hover:bg-surface-2 hover:text-text",
-                )}
-              >
-                <Dot color={colorHex(course.color)} />
-                <span className="flex-1 truncate">{course.code || course.name}</span>
-                {open > 0 ? (
-                  <span className="tabular text-[11px] text-subtle">{open}</span>
-                ) : null}
-              </Link>
-            ))
-          )}
-        </div>
-      </div>
-
-      <ContextMenu
-        label={menu.state ? `Actions for ${menu.state.target.name}` : undefined}
-        position={menu.state?.position ?? null}
-        onClose={menu.close}
-        items={menu.state ? courseMenuItems(menu.state.target) : []}
-      />
-
-      <CourseModal
-        key={editing?.id ?? "none"}
-        open={Boolean(editing)}
-        course={editing}
-        onClose={() => setEditing(null)}
-        onSubmit={(values) => editing && updateCourse(editing.id, values)}
-      />
-
-      <ConfirmDialog
-        open={Boolean(deleting)}
-        onClose={() => setDeleting(null)}
-        onConfirm={() => deleting && deleteCourse(deleting.id)}
-        title={`Delete ${deleting?.name ?? "course"}?`}
-        body="Its tasks stay, but they lose their course tag. If it came from Canvas, syncing again will recreate it."
-      />
+      <SidebarGroups onNavigate={onNavigate} />
 
       <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-3">
         <Link
