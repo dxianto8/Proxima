@@ -30,6 +30,17 @@ export function TaskRow({
   const done = task.status === "done";
   const late = isOverdue(task, now);
 
+  // Which chips the meta line would carry. An undated task with no course has
+  // none, and the row must not reserve space for a line that isn't there —
+  // otherwise its title sits above centre.
+  const metaCourse = showCourse && course ? course : null;
+  const metaDue = showDue && task.dueAt ? task.dueAt : null;
+  const inProgress = task.status === "doing" && !done;
+  const points = task.canvas?.pointsPossible ?? null;
+  const hasMeta = Boolean(
+    metaCourse || metaDue || task.estimateMinutes || inProgress || points,
+  );
+
   return (
     <div
       role="button"
@@ -79,39 +90,39 @@ export function TaskRow({
           </p>
         ) : null}
 
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted">
-          {showCourse && course ? (
-            <span className="inline-flex items-center gap-1.5">
-              <Dot color={colorHex(course.color)} />
-              <span className="truncate">{course.code || course.name}</span>
-            </span>
-          ) : null}
+        {hasMeta ? (
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted">
+            {metaCourse ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Dot color={colorHex(metaCourse.color)} />
+                <span className="truncate">{metaCourse.code || metaCourse.name}</span>
+              </span>
+            ) : null}
 
-          {showDue && task.dueAt ? (
-            <span
-              className={cn(
-                "tabular inline-flex items-center gap-1",
-                late && "font-medium text-danger",
-              )}
-              title={late ? formatOverdue(task.dueAt, now) : undefined}
-            >
-              {late ? <ClockIcon size={12} /> : null}
-              {formatDue(task.dueAt, task.hasDueTime, now)}
-            </span>
-          ) : null}
+            {metaDue ? (
+              <span
+                className={cn(
+                  "tabular inline-flex items-center gap-1",
+                  late && "font-medium text-danger",
+                )}
+                title={late ? formatOverdue(metaDue, now) : undefined}
+              >
+                {late ? <ClockIcon size={12} /> : null}
+                {formatDue(metaDue, task.hasDueTime, now)}
+              </span>
+            ) : null}
 
-          {task.estimateMinutes ? (
-            <span className="tabular">{formatEstimate(task.estimateMinutes)}</span>
-          ) : null}
+            {task.estimateMinutes ? (
+              <span className="tabular">{formatEstimate(task.estimateMinutes)}</span>
+            ) : null}
 
-          {task.status === "doing" && !done ? (
-            <span className="font-medium text-accent">In progress</span>
-          ) : null}
+            {inProgress ? (
+              <span className="font-medium text-accent">In progress</span>
+            ) : null}
 
-          {task.canvas?.pointsPossible ? (
-            <span className="tabular text-subtle">{task.canvas.pointsPossible} pts</span>
-          ) : null}
-        </div>
+            {points ? <span className="tabular text-subtle">{points} pts</span> : null}
+          </div>
+        ) : null}
       </div>
 
       {task.canvas ? (

@@ -74,6 +74,18 @@ the first group, keeping the order they were listed in. It is idempotent.
 Deleting a group never deletes its contents — they move to the first remaining
 group — and the last group cannot be deleted, since courses need a home.
 
+## Routing
+
+`app/page.tsx` is the public landing page and renders on a bare canvas. The
+product lives in the `app/(app)/` route group, whose layout is the only thing
+that mounts `AppShell` — route groups don't affect URLs, so `/today` and the
+rest are unchanged. Put new product pages inside `(app)/`; anything outside it
+renders without the sidebar and top bar.
+
+The providers (store, theme, task editor, Canvas sync) stay in the root layout
+so both the landing page and the app share them. The desktop shell opens
+`/today` directly and never sees the landing page.
+
 ## Checks
 
 `npm run check` runs the typechecker and the unit tests. `npm run build` must

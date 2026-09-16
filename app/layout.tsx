@@ -5,7 +5,6 @@ import { StoreProvider } from "@/lib/store";
 import { ThemeScript, ThemeSync } from "@/components/theme";
 import { TaskEditorProvider } from "@/components/task-editor";
 import { CanvasSyncProvider } from "@/components/canvas/sync-provider";
-import { AppShell } from "@/components/app-shell";
 import { DesktopBridge, DesktopTitlebar } from "@/components/desktop-bridge";
 
 const inter = Inter({
@@ -48,7 +47,7 @@ export default function RootLayout({
             <CanvasSyncProvider>
               <DesktopBridge />
               <DesktopTitlebar />
-              <AppShell>{children}</AppShell>
+              {children}
             </CanvasSyncProvider>
           </TaskEditorProvider>
         </StoreProvider>
