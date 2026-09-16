@@ -80,12 +80,22 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="flex items-center gap-2 px-4 py-4">
-        <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-accent-text">
+      <Link
+        href="/"
+        onClick={onNavigate}
+        aria-label="Proxima home"
+        className="group/logo mx-2 flex items-center gap-2 rounded-lg px-2 py-4 transition-colors hover:bg-surface-2"
+      >
+        <span
+          className={cn(
+            "grid h-7 w-7 place-items-center rounded-lg bg-accent text-accent-text",
+            "transition-transform duration-200 group-hover/logo:scale-105",
+          )}
+        >
           <SparkIcon size={15} />
         </span>
         <span className="text-[15px] font-semibold tracking-[-0.02em] text-text">Proxima</span>
-      </div>
+      </Link>
 
       <nav className="space-y-0.5 px-2.5">
         {NAV.map(({ href, label, icon: Icon }) => {
