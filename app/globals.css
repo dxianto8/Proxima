@@ -120,6 +120,93 @@
   --shadow-overlay: var(--shadow-lg);
 }
 
+/*
+ * The landing page is a fixed dark surface whatever the app's theme is, so the
+ * front door reads the same for everyone and the accent stays legible on black.
+ *
+ * Scoped to a wrapper rather than :root on purpose: ThemeSync writes a custom
+ * theme as inline styles on the root element, and inline styles would beat a
+ * stylesheet rule there. On a descendant the nearest definition wins.
+ */
+.landing {
+  --bg: #000000;
+  --surface: #0b0c0f;
+  --surface-2: #121419;
+  --surface-3: #1a1d23;
+  --border: #1f232a;
+  --border-strong: #333944;
+  --text: #f2f4f7;
+  --text-muted: #9aa2ae;
+  --text-subtle: #6d7683;
+  --accent: #7a83ef;
+  --accent-hover: #8d95f4;
+  --accent-soft: #1b1e38;
+  --accent-text: #0a0b0e;
+  --danger: #ef767b;
+  --danger-soft: #2e1a1c;
+  --warn: #dda33f;
+  --warn-soft: #2c2213;
+  --success: #63c47c;
+  --success-soft: #14291b;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 12px 48px rgb(0 0 0 / 0.65);
+  --app-bg: transparent;
+  --chrome-bar: color-mix(in srgb, #000000 70%, transparent);
+  --chrome-blur: saturate(1.2) blur(14px);
+  color-scheme: dark;
+}
+
+/*
+ * Whatever is behind the landing page — the overscroll gutter, the area past
+ * the last section — stays blank black, and a wallpaper set inside the app
+ * never bleeds through it.
+ */
+:root[data-landing="true"] body {
+  background-color: #000000;
+}
+
+:root[data-landing="true"] body::before,
+:root[data-landing="true"] body::after {
+  display: none !important;
+}
+
+/*
+ * Scroll-reveal. The hidden state only applies once the pre-paint script has
+ * added `.js`, so with scripting off — or before hydration — the content is
+ * simply visible rather than stuck at zero opacity.
+ */
+.reveal {
+  transition:
+    opacity 700ms cubic-bezier(0.22, 0.75, 0.3, 1),
+    transform 700ms cubic-bezier(0.22, 0.75, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.js .reveal {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+}
+
+.js .reveal[data-visible="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 @layer base {
   * {
     border-color: var(--border);

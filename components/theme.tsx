@@ -30,6 +30,7 @@ const THEMED_VARS = [
 export function ThemeScript() {
   const script = `(function(){try{
 var root=document.documentElement;
+root.classList.add("js");
 var p="system",custom=null,dim=72;
 var raw=localStorage.getItem(${JSON.stringify(STORAGE_KEY)});
 if(raw){var d=JSON.parse(raw);if(d&&d.preferences){

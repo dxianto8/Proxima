@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AppPreview } from "@/components/marketing/app-preview";
+import { HeroGlow, LandingChrome } from "@/components/marketing/landing-chrome";
 import { OpenAppButton } from "@/components/marketing/open-app-button";
+import { Reveal } from "@/components/marketing/reveal";
 import {
   CalendarIcon,
   CheckIcon,
@@ -54,12 +56,14 @@ const FEATURES = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-dvh bg-bg">
+    <div className="landing min-h-dvh bg-bg">
+      <LandingChrome />
+
       {/* ------------------------------------------------------------- nav */}
       <header className="sticky top-0 z-30 border-b border-border bg-[var(--chrome-bar)] [backdrop-filter:var(--chrome-blur)]">
         <nav className="mx-auto flex h-14 w-full max-w-6xl items-center gap-2 px-5">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-accent-text">
+          <Link href="/" className="group/logo flex items-center gap-2">
+            <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-accent-text transition-transform duration-200 group-hover/logo:scale-105">
               <SparkIcon size={15} />
             </span>
             <span className="text-[15px] font-semibold tracking-[-0.02em] text-text">
@@ -89,52 +93,60 @@ export default function LandingPage() {
 
       {/* ------------------------------------------------------------ hero */}
       <section className="relative overflow-hidden">
-        {/* A soft wash of the accent behind the hero. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(60%_70%_at_50%_0%,var(--accent-soft),transparent)]"
-        />
+        {/* A soft wash of the accent behind the hero, drifting as you scroll. */}
+        <HeroGlow />
         <div className="relative mx-auto w-full max-w-6xl px-5 pb-12 pt-16 sm:pt-24">
           <div className="mx-auto max-w-2xl text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-[12px] font-medium text-muted shadow-card">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-              Built for Canvas
-            </span>
+            <Reveal>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-[12px] font-medium text-muted shadow-card">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                Built for Canvas
+              </span>
+            </Reveal>
 
-            <h1 className="mt-5 text-balance text-[38px] font-semibold leading-[1.08] tracking-[-0.035em] text-text sm:text-[54px]">
-              Coursework that keeps itself up to date.
-            </h1>
+            <Reveal delay={70}>
+              <h1 className="mt-5 text-balance text-[38px] font-semibold leading-[1.08] tracking-[-0.035em] text-text sm:text-[54px]">
+                Coursework that keeps itself up to date.
+              </h1>
+            </Reveal>
 
-            <p className="mx-auto mt-4 max-w-xl text-pretty text-[16px] leading-relaxed text-muted sm:text-[17.5px]">
-              Import your Canvas assignments in one click, see them on a calendar, and
-              add everything else in plain English. It all stays in your browser.
-            </p>
+            <Reveal delay={140}>
+              <p className="mx-auto mt-4 max-w-xl text-pretty text-[16px] leading-relaxed text-muted sm:text-[17.5px]">
+                Import your Canvas assignments in one click, see them on a calendar, and
+                add everything else in plain English. It all stays in your browser.
+              </p>
+            </Reveal>
 
-            <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Reveal
+              delay={210}
+              className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
+            >
               <OpenAppButton />
               <Link
                 href="#features"
-                className="inline-flex h-12 items-center rounded-xl border border-border bg-surface px-5 text-[15px] font-medium text-text shadow-card transition-colors hover:border-border-strong"
+                className="inline-flex h-12 items-center rounded-xl border border-border bg-surface px-5 text-[15px] font-medium text-text shadow-card transition-all duration-200 hover:border-border-strong active:scale-[0.98]"
               >
                 See what it does
               </Link>
-            </div>
+            </Reveal>
 
-            <p className="mt-4 text-[12.5px] text-subtle">
-              No account. No sign-in. Nothing leaves your device.
-            </p>
+            <Reveal delay={280}>
+              <p className="mt-4 text-[12.5px] text-subtle">
+                No account. No sign-in. Nothing leaves your device.
+              </p>
+            </Reveal>
           </div>
 
-          <div className="mx-auto mt-12 max-w-4xl sm:mt-16">
+          <Reveal delay={340} className="mx-auto mt-12 max-w-4xl sm:mt-16">
             <AppPreview />
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* -------------------------------------------------------- features */}
       <section id="features" className="scroll-mt-16 border-t border-border">
         <div className="mx-auto w-full max-w-6xl px-5 py-16 sm:py-20">
-          <div className="max-w-xl">
+          <Reveal className="max-w-xl">
             <h2 className="text-[26px] font-semibold tracking-[-0.03em] text-text sm:text-[32px]">
               The parts that actually save you time
             </h2>
@@ -143,13 +155,15 @@ export default function LandingPage() {
               that arrive from somewhere else, and everything else you're juggling alongside
               them.
             </p>
-          </div>
+          </Reveal>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((feature) => (
-              <article
+            {FEATURES.map((feature, index) => (
+              <Reveal
                 key={feature.title}
-                className="rounded-xl border border-border bg-surface p-5 shadow-card transition-colors hover:border-border-strong"
+                as="article"
+                delay={(index % 3) * 80}
+                className="rounded-xl border border-border bg-surface p-5 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-raised"
               >
                 <span className="grid h-9 w-9 place-items-center rounded-lg bg-accent-soft text-accent">
                   {feature.icon}
@@ -160,7 +174,7 @@ export default function LandingPage() {
                 <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted">
                   {feature.body}
                 </p>
-              </article>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -169,7 +183,7 @@ export default function LandingPage() {
       {/* ------------------------------------------------------- quick add */}
       <section className="border-t border-border bg-surface-2/40">
         <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-16 sm:py-20 lg:grid-cols-2 lg:items-center">
-          <div className="min-w-0">
+          <Reveal className="min-w-0">
             <h2 className="text-[26px] font-semibold tracking-[-0.03em] text-text sm:text-[32px]">
               One line in. A finished task out.
             </h2>
@@ -192,9 +206,12 @@ export default function LandingPage() {
                 </div>
               ))}
             </dl>
-          </div>
+          </Reveal>
 
-          <div className="min-w-0 rounded-xl border border-border bg-surface p-5 shadow-card">
+          <Reveal
+            delay={120}
+            className="min-w-0 rounded-xl border border-border bg-surface p-5 shadow-card"
+          >
             <div className="flex items-center gap-2.5 rounded-xl border border-accent px-3 py-2.5 ring-2 ring-accent/20">
               <SparkIcon size={16} className="shrink-0 text-accent" />
               <span className="min-w-0 truncate font-mono text-[13px] text-text">
@@ -217,13 +234,13 @@ export default function LandingPage() {
                 ASTR 201 · Friday · 5:00pm · 2h · High
               </p>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ---------------------------------------------------------- closer */}
       <section className="border-t border-border">
-        <div className="mx-auto w-full max-w-6xl px-5 py-16 text-center sm:py-20">
+        <Reveal className="mx-auto w-full max-w-6xl px-5 py-16 text-center sm:py-20">
           <h2 className="text-[26px] font-semibold tracking-[-0.03em] text-text sm:text-[32px]">
             Start with today.
           </h2>
@@ -234,7 +251,7 @@ export default function LandingPage() {
           <div className="mt-7 flex justify-center">
             <OpenAppButton />
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* ---------------------------------------------------------- footer */}
